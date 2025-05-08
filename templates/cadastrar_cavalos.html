@@ -1,0 +1,48 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Novo Cavalo</h2>
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label for="name" class="form-label">Nome do Cavalo</label>
+    <input type="text" class="form-control" id="name" name="name" required />
+  </div>
+  <div class="mb-3">
+    <label for="sexo" class="form-label">Sexo</label>
+    <input type="text" class="form-control" id="sexo" name="sexo" required />
+  </div>
+  <div class="mb-3">
+    <label for="breed" class="form-label">Raça do Cavalo</label>
+    <input type="text" class="form-control" id="breed" name="breed" required />
+  </div>
+  <div class="mb-3">
+    <label for="age" class="form-label">Idade do Cavalo</label>
+    <input type="number" class="form-control" id="age" name="age" required />
+  </div>
+  <div class="optional-box">
+    <ul class="optional-list">
+      <li>
+        <input type="checkbox" id="tordilho" name="optional[]" value="tordilho"/>
+        <label for="tordilho">Tordilho</label>
+      </li>
+      <li>
+        <input type="checkbox" id="zaino" name="optional[]" value="zaino"/>
+        <label for="zaino">Zaino</label>
+      </li>
+      <li>
+        <input type="checkbox" id="castanho" name="optional[]" value="castanho"/>
+        <label for="castanho">Castanho</label>
+      </li>
+      <li>
+        <input type="checkbox" id="alazão" name="optional[]" value="alazão"/>
+        <label for="alazão">Alazão</label>
+      </li>
+      <li>
+        <input type="checkbox" id="baio" name="optional[]" value="baio"/>
+        <label for="baio">Baio</label>
+      </li>
+      </ul>
+      </div>
+
+    </ul>
+  <button type="submit" class="btn btn-success">Salvar</button>
+</form>
+{% endblock %}

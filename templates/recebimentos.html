@@ -1,0 +1,15 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Categorias</h2>
+<div class="row">
+  {% for categoria in categorias %}
+  <div class="col-md-4">
+    <div class="card bg-secondary text-white mb-3">
+      <div class="card-header">{{ categoria.nome }}</div>
+      <div class="card-body">
+        <p class="card-text">{{ categoria.descricao }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
