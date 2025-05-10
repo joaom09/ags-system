@@ -1,0 +1,31 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Novo Proprietário</h2>
+
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label for="name" class="form-label">Nome do Proprietário</label>
+    <input
+      type="text"
+      class="form-control"
+      id="name"
+      name="name"
+      required
+      placeholder="Digite o nome do Proprietário"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="number" class="form-label">Telefone</label>
+    <input
+      type="text"
+      class="form-control"
+      id="number"
+      name="number"
+      required
+      placeholder="Digite o telefone do Proprietário"
+    />
+  </div>
+
+  <button type="submit" class="btn btn-success">Salvar</button>
+</form>
+{% endblock %}

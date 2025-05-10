@@ -1,0 +1,101 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Novo Recebimento de Produto</h2>
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label for="proprietario_id" class="form-label"
+      >Proprietário do Cavalo</label
+    >
+    <select name="proprietario_id" class="form-control" required>
+      <option value="" disabled selected>Selecione o Proprietário</option>
+      {% for proprietario in proprietarios %}
+      <option value="{{ proprietario.id }}">{{ proprietario.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="cavalo_id" class="form-label">Cavalo</label>
+    <select name="cavalo_id" class="form-control" required>
+      <option value="" disabled selected>Selecione o Cavalo</option>
+      {% for cavalo in cavalos %}
+      <option value="{{ cavalo.id }}">{{ cavalo.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="data" class="form-label">Data do Recebimento</label>
+    <input type="date" name="data" class="form-control" required />
+  </div>
+
+  <div id="produtos-recebidos">
+    <div class="produto-item">
+      <div class="mb-3">
+        <label for="produto_id_0" class="form-label">Produto Recebido</label>
+        <select name="produto_id[]" class="form-control" required>
+          <option value="" disabled selected>Selecione o Produto</option>
+          {% for produto in produtos %}
+          <option value="{{ produto.id }}">{{ produto.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="quantidade_0" class="form-label">Quantidade Recebida</label>
+        <input
+          type="number"
+          name="quantidade[]"
+          class="form-control"
+          required
+        />
+      </div>
+      <button type="button" class="btn btn-danger btn-sm remover-produto">
+        Remover
+      </button>
+    </div>
+  </div>
+
+  <button type="button" id="adicionar-produto" class="btn btn-info mt-2">
+    Adicionar Produto
+  </button>
+
+  <button type="submit" class="btn btn-success mt-3">Salvar Recebimento</button>
+</form>
+
+<script>
+  // Código JavaScript para adicionar e remover dinamicamente os campos de produto
+  const adicionarProdutoBtn = document.getElementById("adicionar-produto");
+  const produtosRecebidosDiv = document.getElementById("produtos-recebidos");
+  let contadorProdutos = 1;
+
+  adicionarProdutoBtn.addEventListener("click", () => {
+    const novoProdutoDiv = document.createElement("div");
+    novoProdutoDiv.classList.add("produto-item");
+    novoProdutoDiv.innerHTML = `
+            <div class="mb-3">
+                <label for="produto_id_${contadorProdutos}" class="form-label">Produto Recebido</label>
+                <select name="produto_id[]" class="form-control" required>
+                    <option value="" disabled selected>Selecione o Produto</option>
+                    {% for produto in produtos %}
+                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="quantidade_${contadorProdutos}" class="form-label">Quantidade Recebida</label>
+                <input type="number" name="quantidade[]" class="form-control" required>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remover-produto">Remover</button>
+        `;
+    produtosRecebidosDiv.appendChild(novoProdutoDiv);
+    contadorProdutos++;
+
+    const removerBotoes = document.querySelectorAll(".remover-produto");
+    removerBotoes.forEach((botao) => {
+      botao.addEventListener("click", (event) => {
+        event.target.parentNode.remove();
+      });
+    });
+  });
+</script>
+
+{% endblock %}

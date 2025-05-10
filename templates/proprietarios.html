@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Proprietários</h2>
+<div class="d-flex justify-content-end mt-4 mb-3">
+  <a href="{{ url_for('novoProprietario') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Proprietário
+  </a>
+</div>
+<table class="table table-hover table-striped tabela-app">
+  <thead>
+    <tr>
+      <th scope="col" class="text-center">Nome</th>
+      <th scope="col" class="text-center">Telefone</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in proprietarios %}
+    <tr>
+      <td class="text-center">{{ p.nome }}</td>
+      <td class="text-center">{{ p.telefone }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

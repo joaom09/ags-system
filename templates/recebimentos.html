@@ -1,15 +1,31 @@
 {% extends 'base.html' %} {% block content %}
-<h2 class="mb-4">Categorias</h2>
-<div class="row">
-  {% for categoria in categorias %}
-  <div class="col-md-4">
-    <div class="card bg-secondary text-white mb-3">
-      <div class="card-header">{{ categoria.nome }}</div>
-      <div class="card-body">
-        <p class="card-text">{{ categoria.descricao }}</p>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
+<h2 class="mb-4">Recebimentos</h2>
+<div class="d-flex justify-content-end mt-4 mb-3">
+  <a href="{{ url_for('novoRecebimento') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Recebimento
+  </a>
 </div>
+
+<table class="table table-hover table-striped tabela-app">
+  <thead>
+    <tr>
+      <th scope="col" class="text-center">Proprietário</th>
+      <th scope="col" class="text-center">Cavalo</th>
+      <th scope="col" class="text-center">Data</th>
+      <th scope="col" class="text-center">Itens</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for recebimento in recebimentos %}
+    <tr>
+      <td class="text-center">{{ recebimento['nome_proprietario'] }}</td>
+      <td class="text-center">{{ recebimento['nome_cavalo'] }}</td>
+      <td class="text-center">{{recebimento['data'] }}</td>
+      <td class="text-center">
+        {{ recebimento['itens'] | safe if recebimento['itens'] else '-' }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

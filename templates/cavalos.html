@@ -1,0 +1,32 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Cavalos</h2>
+<div class="d-flex justify-content-end mt-4 mb-3">
+  <a href="{{ url_for('novoCavalo') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Novo Cavalo
+  </a>
+</div>
+<table class="table table-hover table-striped tabela-app">
+  <thead>
+    <tr>
+      <th scope="col" class="text-center">Nome Cavalo</th>
+      <th scope="col" class="text-center">Proprietário</th>
+      <th scope="col" class="text-center">Sexo</th>
+      <th scope="col" class="text-center">Raça</th>
+      <th scope="col" class="text-center">Idade</th>
+      <th scope="col" class="text-center">Pelagem</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cavalo in cavalos %}
+    <tr>
+      <td class="text-center">{{ cavalo['nome_cavalo'] }}</td>
+      <td class="text-center">{{ cavalo['nome_proprietario'] }}</td>
+      <td class="text-center">{{ cavalo['raca'] }}</td>
+      <td class="text-center">{{ cavalo['sexo'] }}</td>
+      <td class="text-center">{{ cavalo['idade'] }}</td>
+      <td class="text-center">{{ cavalo['pelagem'] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

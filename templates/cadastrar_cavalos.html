@@ -3,46 +3,76 @@
 <form method="POST" class="bg-secondary p-4 rounded">
   <div class="mb-3">
     <label for="name" class="form-label">Nome do Cavalo</label>
-    <input type="text" class="form-control" id="name" name="name" required />
+    <input
+      type="text"
+      class="form-control"
+      id="name"
+      name="name"
+      required
+      placeholder="Digite o nome do Cavalo"
+    />
   </div>
-  <div class="mb-3">
-    <label for="sexo" class="form-label">Sexo</label>
-    <input type="text" class="form-control" id="sexo" name="sexo" required />
-  </div>
-  <div class="mb-3">
-    <label for="breed" class="form-label">Raça do Cavalo</label>
-    <input type="text" class="form-control" id="breed" name="breed" required />
-  </div>
-  <div class="mb-3">
-    <label for="age" class="form-label">Idade do Cavalo</label>
-    <input type="number" class="form-control" id="age" name="age" required />
-  </div>
-  <div class="optional-box">
-    <ul class="optional-list">
-      <li>
-        <input type="checkbox" id="tordilho" name="optional[]" value="tordilho"/>
-        <label for="tordilho">Tordilho</label>
-      </li>
-      <li>
-        <input type="checkbox" id="zaino" name="optional[]" value="zaino"/>
-        <label for="zaino">Zaino</label>
-      </li>
-      <li>
-        <input type="checkbox" id="castanho" name="optional[]" value="castanho"/>
-        <label for="castanho">Castanho</label>
-      </li>
-      <li>
-        <input type="checkbox" id="alazão" name="optional[]" value="alazão"/>
-        <label for="alazão">Alazão</label>
-      </li>
-      <li>
-        <input type="checkbox" id="baio" name="optional[]" value="baio"/>
-        <label for="baio">Baio</label>
-      </li>
-      </ul>
-      </div>
 
-    </ul>
+  <div class="mb-3">
+    <label for="proprietario_id" class="form-label">Proprietário</label>
+    <select name="proprietario_id" class="form-control" required>
+      <option value="" disabled selected>Selecione o Proprietário</option>
+      {% for proprietario in proprietarios %}
+      <option value="{{ proprietario.id }}">{{ proprietario.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="sexo_id" class="form-label">Sexo</label>
+    <select name="sexo_id" class="form-control" required>
+      <option value="" disabled selected>Selecione o Sexo</option>
+      {% for sexo in sexos %}
+      <option value="{{ sexo.id }}">{{ sexo.sexo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="raca_id" class="form-label">Raça</label>
+    <select name="raca_id" class="form-control" required>
+      <option value="" disabled selected>Selecione a Raça do Cavalo</option>
+      {% for raca in racas %}
+      <option value="{{ raca.id }}">{{ raca.raca }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="idade" class="form-label">Idade</label>
+    <input
+      type="number"
+      class="form-control"
+      id="idade"
+      name="idade"
+      required
+      placeholder="Digite a idade do Cavalo"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Pelagem</label><br />
+    {% for pelagem in pelagens %}
+    <div class="form-check form-check-inline">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="pelagem_id"
+        id="pelagem_{{ pelagem.id }}"
+        value="{{ pelagem.id }}"
+      />
+      <label class="form-check-label" for="pelagem_{{ pelagem.id }}"
+        >{{ pelagem.pelagem }}</label
+      >
+    </div>
+    {% endfor %}
+  </div>
+
   <button type="submit" class="btn btn-success">Salvar</button>
 </form>
 {% endblock %}

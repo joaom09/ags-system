@@ -53,21 +53,21 @@ def criar_tabelas():
             nome TEXT NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS pedidos (
+        CREATE TABLE IF NOT EXISTS recebimentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cavalo_id INTEGER NOT NULL,
             proprietario_id INTEGER,
+            cavalo_id INTEGER NOT NULL,
             data TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cavalo_id) REFERENCES cavalos(id),
-            FOREIGN KEY (proprietario_id) REFERENCES proprietario(id)
+            FOREIGN KEY (proprietario_id) REFERENCES proprietario(id),
+            FOREIGN KEY (cavalo_id) REFERENCES cavalos(id)
         );
 
-        CREATE TABLE IF NOT EXISTS itens_pedido (
+        CREATE TABLE IF NOT EXISTS itens_recebimento (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pedido_id INTEGER,
+            recebimento_id INTEGER,
             produto_id INTEGER,
             quantidade INTEGER NOT NULL,
-            FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+            FOREIGN KEY (recebimento_id) REFERENCES recebimentos(id),
             FOREIGN KEY (produto_id) REFERENCES produtos(id)
         );
     ''')
@@ -78,34 +78,42 @@ def criar_tabelas():
 # Roda isso uma vez pra popular a tabela de produtos (opcional)
 def popular_produtos():
     conn = conexao()
-    produtos = ['Feno', 'Ração', 'Sal Mineral', 'Aveia']
-    for nome in produtos:
-        conn.execute('INSERT INTO produtos (nome) VALUES (?)', (nome,))
-    conn.commit()
+    count = conn.execute('SELECT COUNT(*) FROM produtos').fetchone()[0]
+    if count == 0:
+        produtos = ['Feno', 'Ração', 'Sal Mineral', 'Aveia']
+        for nome in produtos:
+            conn.execute('INSERT INTO produtos (nome) VALUES (?)', (nome,))
+        conn.commit()
     conn.close()
 
 def popular_sexo():
     conn = conexao()
-    sexos = ['Macho', 'Fêmea']
-    for s in sexos:
-        conn.execute('INSERT INTO sexo (sexo) VALUES (?)', (s,))
-    conn.commit()
+    count = conn.execute('SELECT COUNT(*) FROM sexo').fetchone()[0]
+    if count == 0:
+        sexos = ['Macho', 'Fêmea']
+        for s in sexos:
+            conn.execute('INSERT INTO sexo (sexo) VALUES (?)', (s,))
+        conn.commit()
     conn.close()
 
 def popular_raca():
     conn = conexao()
-    racas = ['Quarto de Milha', 'Mangalarga', 'SRD', 'Appaloosa']
-    for r in racas:
-        conn.execute('INSERT INTO raca (raca) VALUES (?)', (r,))
-    conn.commit()
+    count = conn.execute('SELECT COUNT(*) FROM raca').fetchone()[0]
+    if count == 0:
+        racas = ['Quarto de Milha', 'Mangalarga', 'SRD', 'Appaloosa']
+        for r in racas:
+            conn.execute('INSERT INTO raca (raca) VALUES (?)', (r,))
+        conn.commit()
     conn.close()
 
 def popular_pelagem():
     conn = conexao()
-    pelagens = ['Tordilho', 'Zaino', 'Castanho', 'Alazão', 'Baio', 'Preto']
-    for p in pelagens:
-        conn.execute('INSERT INTO pelagem (pelagem) VALUES (?)', (p,))
-    conn.commit()
+    count = conn.execute('SELECT COUNT(*) FROM pelagem').fetchone()[0]
+    if count == 0:
+        pelagens = ['Tordilho', 'Zaino', 'Castanho', 'Alazão', 'Baio', 'Preto']
+        for p in pelagens:
+            conn.execute('INSERT INTO pelagem (pelagem) VALUES (?)', (p,))
+        conn.commit()
     conn.close()
 
 def popular_todos():
@@ -113,4 +121,3 @@ def popular_todos():
     popular_sexo()
     popular_raca()
     popular_pelagem()
-
