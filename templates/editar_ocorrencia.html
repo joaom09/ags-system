@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Editar Ocorrência</h2>
+<form method="POST" class="bg-secondary p-4 rounded">
+  {% if cavalo_selecionado %}
+  <div class="mb-3">
+    <label class="form-label">Cavalo</label>
+    <input type="hidden" name="cavalo_id" value="{{ cavalo_selecionado.id }}" />
+    <input
+      type="text"
+      class="form-control"
+      value="{{ cavalo_selecionado.nome }}"
+      disabled
+    />
+  </div>
+  {% else %}
+  <div class="mb-3">
+    <label class="form-label">Cavalo</label>
+    <select name="cavalo_id" class="form-select" required>
+      <option value="">Selecione</option>
+      {% for cavalo in cavalos %}
+      <option value="{{ cavalo.id }}" {% if cavalo.id == ocorrencia.cavalo_id %}selected{% endif %}>
+        {{ cavalo.nome }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+
+  <div class="mb-3">
+    <label class="form-label">Tipo do Evento</label>
+    <input
+      type="text"
+      class="form-control"
+      name="tipo"
+      required
+      placeholder="Ex: Casqueamento, Vacinação"
+      value="{{ ocorrencia.tipo }}"
+    />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Data</label>
+    <input
+      type="date"
+      class="form-control"
+      name="data"
+      required
+      value="{{ ocorrencia.data }}"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="descricao" class="form-label">Descrição</label>
+    <textarea
+      class="form-control"
+      name="descricao"
+      rows="3"
+    >{{ ocorrencia.descricao }}</textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+</form>
+{% endblock %}

@@ -15,10 +15,15 @@
 
   <div class="mb-3">
     <label for="cavalo_id" class="form-label">Cavalo</label>
-    <select name="cavalo_id" class="form-control" required>
+    <select name="cavalo_id" class="form-control" id="cavalo-select" required>
       <option value="" disabled selected>Selecione o Cavalo</option>
       {% for cavalo in cavalos %}
-      <option value="{{ cavalo.id }}">{{ cavalo.nome }}</option>
+      <option
+        value="{{ cavalo.id }}"
+        data-proprietario="{{ cavalo.proprietario_id }}"
+      >
+        {{ cavalo.nome }}
+      </option>
       {% endfor %}
     </select>
   </div>
@@ -31,7 +36,7 @@
   <div id="produtos-recebidos">
     <div class="produto-item">
       <div class="mb-3">
-        <label for="produto_id_0" class="form-label">Produto Recebido</label>
+        <label class="form-label">Produto Recebido</label>
         <select name="produto_id[]" class="form-control" required>
           <option value="" disabled selected>Selecione o Produto</option>
           {% for produto in produtos %}
@@ -40,7 +45,7 @@
         </select>
       </div>
       <div class="mb-3">
-        <label for="quantidade_0" class="form-label">Quantidade Recebida</label>
+        <label class="form-label">Quantidade Recebida</label>
         <input
           type="number"
           name="quantidade[]"
@@ -48,21 +53,25 @@
           required
         />
       </div>
-      <button type="button" class="btn btn-danger btn-sm remover-produto">
-        Remover
-      </button>
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-danger btn-sm remover-produto">
+          Remover
+        </button>
+      </div>
     </div>
   </div>
 
-  <button type="button" id="adicionar-produto" class="btn btn-info mt-2">
-    Adicionar Produto
-  </button>
+  <div class="d-flex justify-content-end mt-2">
+    <button type="button" id="adicionar-produto" class="btn btn-info btn-sm">
+      Adicionar Produto
+    </button>
+  </div>
 
   <button type="submit" class="btn btn-success mt-3">Salvar Recebimento</button>
 </form>
 
 <script>
-  // Código JavaScript para adicionar e remover dinamicamente os campos de produto
+  // Adicionar/remover produtos
   const adicionarProdutoBtn = document.getElementById("adicionar-produto");
   const produtosRecebidosDiv = document.getElementById("produtos-recebidos");
   let contadorProdutos = 1;
@@ -71,31 +80,53 @@
     const novoProdutoDiv = document.createElement("div");
     novoProdutoDiv.classList.add("produto-item");
     novoProdutoDiv.innerHTML = `
-            <div class="mb-3">
-                <label for="produto_id_${contadorProdutos}" class="form-label">Produto Recebido</label>
-                <select name="produto_id[]" class="form-control" required>
-                    <option value="" disabled selected>Selecione o Produto</option>
-                    {% for produto in produtos %}
-                    <option value="{{ produto.id }}">{{ produto.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="quantidade_${contadorProdutos}" class="form-label">Quantidade Recebida</label>
-                <input type="number" name="quantidade[]" class="form-control" required>
-            </div>
-            <button type="button" class="btn btn-danger btn-sm remover-produto">Remover</button>
-        `;
+      <div class="mb-3">
+        <label class="form-label">Produto Recebido</label>
+        <select name="produto_id[]" class="form-control" required>
+          <option value="" disabled selected>Selecione o Produto</option>
+          {% for produto in produtos %}
+          <option value="{{ produto.id }}">{{ produto.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Quantidade Recebida</label>
+        <input type="number" name="quantidade[]" class="form-control" required />
+      </div>
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-danger btn-sm remover-produto">Remover</button>
+      </div>
+    `;
     produtosRecebidosDiv.appendChild(novoProdutoDiv);
     contadorProdutos++;
 
+    // Atualiza eventos de remoção
     const removerBotoes = document.querySelectorAll(".remover-produto");
     removerBotoes.forEach((botao) => {
-      botao.addEventListener("click", (event) => {
-        event.target.parentNode.remove();
-      });
+      botao.onclick = (e) => e.target.closest(".produto-item").remove();
     });
   });
 </script>
 
+<script>
+  // Filtrar cavalos pelo proprietário
+  const proprietarioSelect = document.querySelector(
+    'select[name="proprietario_id"]'
+  );
+  const cavaloSelect = document.getElementById("cavalo-select");
+
+  proprietarioSelect.addEventListener("change", () => {
+    const idSelecionado = proprietarioSelect.value;
+
+    Array.from(cavaloSelect.options).forEach((option) => {
+      if (!option.value) return;
+      option.style.display = "none";
+      if (option.getAttribute("data-proprietario") === idSelecionado) {
+        option.style.display = "block";
+      }
+    });
+
+    cavaloSelect.value = "";
+  });
+</script>
 {% endblock %}

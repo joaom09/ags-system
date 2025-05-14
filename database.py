@@ -10,6 +10,7 @@ def conexao():
 
 def criar_tabelas():
     os.makedirs('database', exist_ok=True)
+    os.makedirs('static/uploads', exist_ok=True)
     conn = conexao()
 
     conn.executescript('''
@@ -21,9 +22,21 @@ def criar_tabelas():
             idade INTEGER,
             pelagem_id INTEGER,
             proprietario_id INTEGER,
+            imagem TEXT,
             FOREIGN KEY (sexo_id) REFERENCES sexo(id),
             FOREIGN KEY (raca_id) REFERENCES raca(id),
             FOREIGN KEY (pelagem_id) REFERENCES pelagem(id),
+            FOREIGN KEY (proprietario_id) REFERENCES proprietario(id)
+        );
+                       
+        CREATE TABLE IF NOT EXISTS ocorrencias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cavalo_id INTEGER NOT NULL,
+            tipo TEXT NOT NULL,
+            descricao TEXT,
+            data TEXT DEFAULT CURRENT_TIMESTAMP,
+            proprietario_id INTEGER,
+            FOREIGN KEY (cavalo_id) REFERENCES cavalos(id)
             FOREIGN KEY (proprietario_id) REFERENCES proprietario(id)
         );
 
@@ -75,7 +88,6 @@ def criar_tabelas():
     conn.commit()
     conn.close()
 
-# Roda isso uma vez pra popular a tabela de produtos (opcional)
 def popular_produtos():
     conn = conexao()
     count = conn.execute('SELECT COUNT(*) FROM produtos').fetchone()[0]

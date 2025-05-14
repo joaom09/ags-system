@@ -1,5 +1,6 @@
-{% extends 'base.html' %} {% block content %}
-<h2 class="mb-4">Novo Cavalo</h2>
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Editar Cavalo</h2>
 <form
   method="POST"
   enctype="multipart/form-data"
@@ -14,15 +15,18 @@
       name="name"
       required
       placeholder="Digite o nome do Cavalo"
+      value="{{ cavalo.nome }}"
     />
   </div>
 
   <div class="mb-3">
     <label for="proprietario_id" class="form-label">Proprietário</label>
     <select name="proprietario_id" class="form-control" required>
-      <option value="" disabled selected>Selecione o Proprietário</option>
+      <option value="" disabled>Selecione o Proprietário</option>
       {% for proprietario in proprietarios %}
-      <option value="{{ proprietario.id }}">{{ proprietario.nome }}</option>
+      <option value="{{ proprietario.id }}" {% if proprietario.id == cavalo.proprietario_id %}selected{% endif %}>
+        {{ proprietario.nome }}
+      </option>
       {% endfor %}
     </select>
   </div>
@@ -30,9 +34,11 @@
   <div class="mb-3">
     <label for="sexo_id" class="form-label">Sexo</label>
     <select name="sexo_id" class="form-control" required>
-      <option value="" disabled selected>Selecione o Sexo</option>
+      <option value="" disabled>Selecione o Sexo</option>
       {% for sexo in sexos %}
-      <option value="{{ sexo.id }}">{{ sexo.sexo }}</option>
+      <option value="{{ sexo.id }}" {% if sexo.id == cavalo.sexo_id %}selected{% endif %}>
+        {{ sexo.sexo }}
+      </option>
       {% endfor %}
     </select>
   </div>
@@ -40,9 +46,11 @@
   <div class="mb-3">
     <label for="raca_id" class="form-label">Raça</label>
     <select name="raca_id" class="form-control" required>
-      <option value="" disabled selected>Selecione a Raça do Cavalo</option>
+      <option value="" disabled>Selecione a Raça do Cavalo</option>
       {% for raca in racas %}
-      <option value="{{ raca.id }}">{{ raca.raca }}</option>
+      <option value="{{ raca.id }}" {% if raca.id == cavalo.raca_id %}selected{% endif %}>
+        {{ raca.raca }}
+      </option>
       {% endfor %}
     </select>
   </div>
@@ -56,6 +64,7 @@
       name="idade"
       required
       placeholder="Digite a idade do Cavalo"
+      value="{{ cavalo.idade }}"
     />
   </div>
 
@@ -69,16 +78,17 @@
         name="pelagem_id"
         id="pelagem_{{ pelagem.id }}"
         value="{{ pelagem.id }}"
+        {% if pelagem.id == cavalo.pelagem_id %}checked{% endif %}
       />
-      <label class="form-check-label" for="pelagem_{{ pelagem.id }}"
-        >{{ pelagem.pelagem }}</label
-      >
+      <label class="form-check-label" for="pelagem_{{ pelagem.id }}">
+        {{ pelagem.pelagem }}
+      </label>
     </div>
     {% endfor %}
   </div>
 
   <div class="mb-3">
-    <label for="imagem" class="form-label">Foto do Cavalo </label>
+    <label for="imagem" class="form-label">Foto do Cavalo</label>
     <input
       type="file"
       class="form-control"
@@ -86,8 +96,14 @@
       name="imagem"
       accept="image/*"
     />
+    {% if cavalo.imagem %}
+    <div class="mt-2">
+      <strong>Imagem atual:</strong><br>
+      <img src="{{ url_for('static', filename='uploads/' ~ cavalo.imagem) }}" alt="Foto do Cavalo" class="img-fluid mt-2" style="max-height: 200px;">
+    </div>
+    {% endif %}
   </div>
 
-  <button type="submit" class="btn btn-success">Salvar</button>
+  <button type="submit" class="btn btn-success">Salvar Alterações</button>
 </form>
 {% endblock %}

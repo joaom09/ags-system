@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Editar Recebimento de Produto</h2>
+
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label class="form-label">Proprietário do Cavalo</label>
+    <input
+      type="text"
+      class="form-control"
+      value="{{ recebimento.proprietario_nome }}"
+      disabled
+    />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Cavalo</label>
+    <input
+      type="text"
+      class="form-control"
+      value="{{ recebimento.cavalo_nome }}"
+      disabled
+    />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data do Recebimento</label>
+    <input
+      type="date"
+      name="data"
+      class="form-control"
+      value="{{ recebimento.data }}"
+      required
+    />
+  </div>
+
+  <hr />
+
+  <h4>Produtos Recebidos</h4>
+
+  <div id="produtos-container">
+    {% for item in produtos_recebidos %}
+    <div class="produto-item border rounded p-3 mb-3 bg-light">
+      <div class="mb-2">
+        <label class="form-label">Produto</label>
+        <select name="produto_id[]" class="form-control" required>
+          <option value="">Selecione o Produto</option>
+          {% for produto in produtos %}
+          <option value="{{ produto.id }}" {% if produto.id == item.produto_id %}selected{% endif %}>
+            {{ produto.nome }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Quantidade</label>
+        <input
+          type="number"
+          name="quantidade[]"
+          class="form-control"
+          value="{{ item.quantidade }}"
+          required
+        />
+      </div>
+      <div class="text-end">
+        <button type="button" class="btn btn-danger btn-sm remover-produto">Remover</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" class="btn btn-info mb-3" id="adicionar-produto">Adicionar Produto</button>
+
+  <div>
+    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+  </div>
+</form>
+
+<script>
+  document.getElementById("adicionar-produto").addEventListener("click", function () {
+    const container = document.getElementById("produtos-container");
+    const produtoHTML = `
+      <div class="produto-item border rounded p-3 mb-3 bg-light">
+        <div class="mb-2">
+          <label class="form-label">Produto</label>
+          <select name="produto_id[]" class="form-control" required>
+            <option value="">Selecione o Produto</option>
+            {% for produto in produtos %}
+            <option value="{{ produto.id }}">{{ produto.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Quantidade</label>
+          <input type="number" name="quantidade[]" class="form-control" required />
+        </div>
+        <div class="text-end">
+          <button type="button" class="btn btn-danger btn-sm remover-produto">Remover</button>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML("beforeend", produtoHTML);
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.classList.contains("remover-produto")) {
+      e.target.closest(".produto-item").remove();
+    }
+  });
+</script>
+{% endblock %}

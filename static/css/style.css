@@ -1,50 +1,68 @@
 /* === Base geral === */
 body {
-  background-color: #fdfaf5; /* Bege bem claro */
+  background-color: #f5f0e1; /* Bege bem claro */
   color: #4a2e1d; /* Marrom escuro para texto */
   font-family: "Segoe UI", sans-serif;
-  padding-bottom: 50px; /* Espaço no final da página */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container.py-5 {
+  flex-grow: 1;
 }
 
 /* === Navbar === */
 .navbar {
-  background-color: #e8dbc7; /* Bege médio */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background-color: #a47148; /* Marrom bege - Cor de destaque da logo */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* Sombra suave */
 }
 
-.navbar-brand,
-.nav-link {
-  color: #4a2e1d !important;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: #a47148 !important;
-  font-weight: bold;
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  color: #f5f0e1 !important; /* Texto branco para contraste com a navbar */
 }
 
 .navbar-brand img {
   border-radius: 50%;
-  height: 40px;
+  width: 60px;
+  height: 60px;
+  padding: 3px;
+  margin-right: 0.75rem;
+}
+
+.navbar-brand span {
+  font-size: 1.75rem;
+}
+
+.nav-link {
+  color: #f5f0e1 !important; /* Texto branco para contraste com a navbar */
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #ffe0b2 !important; /* Bege claro ao passar o mouse/ativo */
+  font-weight: bold;
 }
 
 /* === Cartões e formulários === */
 .card,
 form {
-  background-color: #fffdf9;
+  background-color: #fffaf0;
   border: none;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(74, 46, 29, 0.1);
-  color: #4a2e1d;
+  color: #5e412e;
 }
 
 form.bg-secondary {
-  background-color: #fffdf9 !important;
+  background-color: #fffaf0 !important;
 }
 
 .form-label {
   font-weight: 500;
-  color: #4a2e1d;
+  color: #5e412e;
 }
 
 /* === Inputs e selects === */
@@ -59,17 +77,17 @@ textarea.form-control {
 input.form-control:focus,
 select.form-control:focus,
 textarea.form-control:focus {
-  border-color: #a47148;
+  border-color: #b8860b;
   box-shadow: 0 0 0 0.2rem rgba(164, 113, 72, 0.25);
 }
 
 .form-control::placeholder {
-  color: #a38c74;
+  color: #a88a62;
 }
 
 /* === Botões === */
 .btn-primary {
-  background-color: #a47148;
+  background-color: #a47148; /* Marrom bege - Cor de destaque da logo */
   border-color: #a47148;
   color: #fff;
 }
@@ -80,22 +98,22 @@ textarea.form-control:focus {
 }
 
 .btn-success {
-  background-color: #a47148;
-  border-color: #a47148;
+  background-color: #8fbc8f; /* Verde para ações de sucesso */
+  border-color: #8fbc8f;
   color: #fff;
 }
 
 .btn-success:hover {
-  background-color: #855e42;
-  border-color: #855e42;
+  background-color: #778b77;
+  border-color: #778b77;
 }
 
-/* === Tabelas reutilizáveis === */
+/* === Tabelas === */
 .tabela-app {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fffdf9;
-  color: #4a2e1d;
+  background-color: #fffaf0; /* Cor de fundo da tabela */
+  color: #4a2e1d; /* Cor do texto da tabela */
   box-shadow: 0 1px 4px rgba(74, 46, 29, 0.1);
   border-radius: 8px;
   overflow: hidden;
@@ -110,12 +128,13 @@ textarea.form-control:focus {
 }
 
 .tabela-app th {
-  background-color: #e8dbc7;
+  background-color: #d4a373; /* Marrom claro para cabeçalho da tabela */
   font-weight: bold;
+  color: #f5f0e1;
 }
 
 .tabela-app tr:nth-child(even) {
-  background-color: #f9f4ec;
+  background-color: #f9f4ec; /* Bege bem claro para linhas pares */
 }
 
 .tabela-app tr:hover {
@@ -123,21 +142,22 @@ textarea.form-control:focus {
   transition: background-color 0.2s ease-in-out;
 }
 
+/* === Formulários === */
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #a47148; /* Bege queimado */
+  border-color: #b8860b;
   outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(164, 113, 72, 0.25); /* sombra suave */
+  box-shadow: 0 0 0 0.2rem rgba(164, 113, 72, 0.25);
 }
 
 input[type="radio"] {
-  accent-color: #a47148; /* Marrom da paleta */
+  accent-color: #a47148;
 }
 
 input[type="radio"].form-check-input {
   appearance: auto;
-  -webkit-appearance: auto; /* para Safari */
+  -webkit-appearance: auto;
   accent-color: #a47148;
   background-image: none !important;
 }
@@ -145,4 +165,15 @@ input[type="radio"].form-check-input {
 input[type="radio"]:focus {
   outline: none;
   box-shadow: none;
+}
+
+/* === Footer === */
+footer {
+  background-color: #a47148;
+  color: #f5f0e1;
+  padding: 20px;
+  text-align: center;
+  width: 100%;
+  font-size: 0.9rem;
+  margin-top: auto;
 }

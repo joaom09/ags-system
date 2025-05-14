@@ -1,0 +1,51 @@
+{% extends 'base.html' %} {% block content %}
+<div class="row">
+  <!-- Coluna de texto -->
+  <div class="col-md-8">
+    <h2>{{ cavalo.nome }}</h2>
+    <p><strong>Proprietário:</strong> {{ cavalo.nome_proprietario }}</p>
+    <p><strong>Sexo:</strong> {{ cavalo.sexo }}</p>
+    <p><strong>Raça:</strong> {{ cavalo.raca }}</p>
+    <p><strong>Idade:</strong> {{ cavalo.idade }}</p>
+    <p><strong>Pelagem:</strong> {{ cavalo.pelagem }}</p>
+  </div>
+
+  <!-- Coluna de imagem -->
+  <div class="col-md-4 text-end">
+    <img
+      src="{{ url_for('static', filename='uploads/' + cavalo['imagem']) }}"
+      class="img-fluid rounded shadow"
+      style="max-height: 300px"
+      alt="Foto do Cavalo"
+    />
+  </div>
+</div>
+
+<h3 class="mt-4">Histórico de Ocorrências</h3>
+<div class="d-flex flex-column gap-3">
+  <!-- Cabeçalhos -->
+  <div class="card px-3 py-2 shadow-sm">
+    <div class="row align-items-center">
+      <div class="col-md-4 fw-bold text-muted small text-center">Tipo</div>
+      <div class="col-md-4 fw-bold text-muted small text-center">Descrição</div>
+      <div class="col-md-4 fw-bold text-muted small text-center">Data</div>
+    </div>
+  </div>
+
+  {% for o in ocorrencias %}
+  <div class="card p-3 shadow-sm">
+    <div class="row align-items-center">
+      <div class="col-md-4 text-center">{{ o['tipo'] }}</div>
+      <div class="col-md-4 text-center">{{ o['descricao'] }}</div>
+      <div class="col-md-4 text-center">{{ o['data'] }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<a
+  href="{{ url_for('novaOcorrencia', id=cavalo.id) }}"
+  class="btn btn-success mt-3"
+  >Adicionar Ocorrência</a
+>
+{% endblock %}
