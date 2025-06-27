@@ -1,0 +1,53 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Novo Usuário</h2>
+
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input
+      type="text"
+      class="form-control"
+      id="nome"
+      name="nome"
+      required
+      placeholder="Digite o nome do usuário"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="email" class="form-label">Email</label>
+    <input
+      type="email"
+      class="form-control"
+      id="email"
+      name="email"
+      required
+      placeholder="Digite o email do usuário"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="senha" class="form-label">Senha</label>
+    <input
+      type="password"
+      class="form-control"
+      id="senha"
+      name="senha"
+      required
+      placeholder="Digite a senha"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="nivel" class="form-label">Tipo de Usuário</label>
+    <select class="form-select" id="nivel" name="nivel" required>
+      <option value="" selected disabled>Selecione o tipo</option>
+      <option value="Administrador">Administrador</option>
+      <option value="Proprietario">Proprietário</option>
+      <option value="Funcionario">Funcionário</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-success">Salvar</button>
+</form>
+{% endblock %}

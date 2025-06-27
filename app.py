@@ -3,22 +3,47 @@ db_path = 'database/base.db'
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
-from flask import Flask, flash, render_template, url_for, request, redirect
+from flask import Flask, flash, render_template, url_for, request, redirect, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from database import criar_tabelas, popular_todos,conexao
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
 criar_tabelas()
 popular_todos()
 
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+
+app.secret_key = 'secret_key'
 
 @app.context_processor
 def inject_now():
     return {'now': datetime.now()}
 
+class User(UserMixin):
+    def __init__(self, id, nome, email, senha):
+        self.id = id
+        self.nome = nome
+        self.email = email
+        self.senha = senha
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = conexao()
+    row = conn.execute('SELECT * FROM usuarios WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    
+    if row:
+        return User(row['id'], row['nome'], row['email'], row['senha'])
+    return None
+
 
 @app.route('/')
+# @login_required
 def home():
     conn = conexao()
     recebimentos = conn.execute('''
@@ -451,10 +476,12 @@ def novaOcorrenciaInterna(cavalo_id=None):
 @app.route('/ocorrencia/<int:id>/editar', methods=['GET', 'POST'])
 def editarOcorrencia(id):
     conn = conexao()
+
     if request.method == 'POST':
         data = request.form['data']
         tipo = request.form['tipo']
         descricao = request.form['descricao']
+        cavalo_id = request.form.get('cavalo_id')  # se quiser permitir edição do cavalo
         conn.execute('''
             UPDATE ocorrencias SET data=?, tipo=?, descricao=? WHERE id=?
         ''', (data, tipo, descricao, id))
@@ -463,8 +490,12 @@ def editarOcorrencia(id):
         return redirect('/ocorrencias')
 
     ocorrencia = conn.execute('SELECT * FROM ocorrencias WHERE id=?', (id,)).fetchone()
+    cavalos = conn.execute('SELECT * FROM cavalos').fetchall()
+    cavalo_selecionado = conn.execute('SELECT * FROM cavalos WHERE id=?', (ocorrencia['cavalo_id'],)).fetchone()
+
     conn.close()
-    return render_template('editar_ocorrencia.html', ocorrencia=ocorrencia)
+    return render_template('editar_ocorrencia.html', ocorrencia=ocorrencia, cavalos=cavalos, cavalo_selecionado=cavalo_selecionado)
+
 
 @app.route('/ocorrencia/<int:id>/excluir', methods=['POST'])
 def excluirOcorrencia(id):
@@ -474,7 +505,111 @@ def excluirOcorrencia(id):
     conn.close()
     return redirect('/ocorrencias')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        senha = request.form['senha']
 
+        conn = conexao()
+        usuario = conn.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
+        conn.close()
+
+        if usuario and check_password_hash(usuario['senha'], senha):
+            session['usuario_id'] = usuario['id']
+            session['usuario_nome'] = usuario['nome']
+            session['usuario_nivel'] = usuario['nivel']
+            return redirect(url_for('home'))
+        else:
+            flash('Email ou senha inválidos', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/esqueci_senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    if request.method == 'POST':
+        email = request.form['email']
+        conn = conexao()
+        usuario = conn.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
+        conn.close()
+
+        if usuario:
+            flash('Instruções para redefinir sua senha foram enviadas para o e-mail.', 'success')
+            # Aqui você pode gerar token e enviar e-mail (ou só mostrar uma próxima tela)
+        else:
+            flash('E-mail não encontrado.', 'danger')
+
+    return render_template('esqueci_senha.html')
+
+
+
+@app.route('/usuarios')
+def usuarios():
+    conn = conexao()
+    usuarios = conn.execute('SELECT * FROM usuarios ORDER BY nome').fetchall()
+    conn.close()
+    return render_template('usuarios.html', usuarios=usuarios)
+
+
+@app.route('/novo_usuario', methods=['GET', 'POST'])
+def novoUsuario():
+    conn = conexao()
+    if request.method == 'POST':
+        nome = request.form['nome']
+        email = request.form['email']
+        senha = request.form['senha']
+        nivel = request.form['nivel']
+
+        # Criptografar senha antes de salvar no banco
+        senha_hash = generate_password_hash(senha)
+
+        conn.execute('''
+            INSERT INTO usuarios (nome, email, senha, nivel)
+            VALUES (?, ?, ?, ?)
+        ''', (nome, email, senha_hash, nivel))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('usuarios'))
+
+    conn.close()
+    return render_template('cadastrar_usuario.html')
+
+
+@app.route('/usuarios/<int:id>/editar', methods=['GET', 'POST'])
+def editarUsuario(id):
+    conn = conexao()
+
+    if request.method == 'POST':
+        nome = request.form['name']
+        email = request.form['number']
+        nivel = request.form['nivel']
+
+        conn.execute('''
+            UPDATE usuarios SET nome=?, email=?, nivel=? WHERE id=?
+        ''', (nome, email, nivel, id))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for('listarUsuarios'))
+
+    usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
+    conn.close()
+    return render_template('editar_usuario.html', usuario=usuario)
+
+
+
+
+@app.route('/usuario/<int:id>/excluir', methods=['POST'])
+def excluirUsuario(id):
+    conn = conexao()
+    conn.execute('DELETE FROM usuarios WHERE id=?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('usuarios'))
 
 
 if __name__ == '__main__':

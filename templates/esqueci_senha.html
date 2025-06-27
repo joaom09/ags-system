@@ -1,0 +1,42 @@
+{% extends 'base_public.html' %} {% block title %}Esqueceu a senha - AGS
+System{% endblock %} {% block content %}
+<div class="card p-4 shadow-sm mx-auto" style="max-width: 400px; width: 100%">
+  <h4 class="text-center mb-3">Recuperar Senha</h4>
+
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %} {% for category, message in messages %}
+  <div
+    class="alert alert-{{ category }} alert-dismissible fade show"
+    role="alert"
+  >
+    {{ message }}
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Fechar"
+    ></button>
+  </div>
+  {% endfor %} {% endif %} {% endwith %}
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="email" class="form-label">Digite seu e-mail</label>
+      <input
+        type="email"
+        class="form-control"
+        name="email"
+        id="email"
+        required
+      />
+    </div>
+    <button
+      type="submit"
+      class="btn w-100 text-light"
+      style="background-color: #a06b3c"
+    >
+      Enviar instruções
+    </button>
+  </form>
+</div>
+{% endblock %}

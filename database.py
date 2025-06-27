@@ -83,6 +83,14 @@ def criar_tabelas():
             FOREIGN KEY (recebimento_id) REFERENCES recebimentos(id),
             FOREIGN KEY (produto_id) REFERENCES produtos(id)
         );
+                       
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            nivel TEXT CHECK(nivel IN ('Administrador', 'Proprietario', 'Funcionario')) NOT NULL        
+        );
     ''')
 
     conn.commit()

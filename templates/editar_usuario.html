@@ -1,0 +1,42 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Editar Usuário</h2>
+
+<form method="POST" class="bg-secondary p-4 rounded">
+  <div class="mb-3">
+    <label for="name" class="form-label">Nome</label>
+    <input
+      type="text"
+      class="form-control"
+      id="name"
+      name="name"
+      required
+      value="{{ usuario.nome }}"
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="number" class="form-label">Email</label>
+    <input
+      type="text"
+      class="form-control"
+      id="number"
+      name="number"
+      required
+      value="{{ usuario.email }}"
+    />
+  </div>
+
+<div class="mb-3">
+  <label for="nivel" class="form-label">Tipo de Usuário</label>
+  <select name="nivel" id="nivel" class="form-select" required>
+    <option value="Administrador" {% if usuario.nivel == 'Administrador' %}selected{% endif %}>Administrador</option>
+    <option value="Proprietario" {% if usuario.nivel == 'Proprietario' %}selected{% endif %}>Proprietário</option>
+    <option value="Funcionario" {% if usuario.nivel == 'Funcionario' %}selected{% endif %}>Funcionário</option>
+  </select>
+</div>
+
+
+
+  <button type="submit" class="btn btn-success">Salvar Alterações</button>
+</form>
+{% endblock %}
