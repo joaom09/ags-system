@@ -48,6 +48,40 @@
     </select>
   </div>
 
+  <div class="mb-3" id="proprietario_field" style="display: none">
+    <label for="proprietario" class="form-label"
+      >Vincular Proprietário (apenas para nível Proprietário):</label
+    >
+    <select class="form-select" id="proprietario" name="proprietario_id">
+      <option value="">-- Selecione --</option>
+      {% for p in proprietarios %}
+      <option value="{{ p.id }}">{{ p.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
   <button type="submit" class="btn btn-success">Salvar</button>
 </form>
+
+<script>
+  // Script para mostrar/esconder o campo de proprietário baseado no nível selecionado
+  document.addEventListener("DOMContentLoaded", function () {
+    const nivelSelect = document.getElementById("nivel");
+    const proprietarioField = document.getElementById("proprietario_field");
+
+    nivelSelect.addEventListener("change", function () {
+      if (this.value === "Proprietario") {
+        proprietarioField.style.display = "block"; // Mostra o campo
+        document
+          .getElementById("proprietario")
+          .setAttribute("required", "required"); // Torna obrigatório
+      } else {
+        proprietarioField.style.display = "none"; // Esconde o campo
+        document.getElementById("proprietario").removeAttribute("required"); // Remove obrigação
+        document.getElementById("proprietario").value = ""; // Limpa a seleção
+      }
+    });
+  });
+</script>
+
 {% endblock %}

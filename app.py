@@ -3,11 +3,12 @@ db_path = 'database/base.db'
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
-from flask import Flask, flash, render_template, url_for, request, redirect, session
+from flask import Flask, flash, render_template, url_for, request, redirect, session, abort
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from database import criar_tabelas, popular_todos,conexao
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -25,11 +26,12 @@ def inject_now():
     return {'now': datetime.now()}
 
 class User(UserMixin):
-    def __init__(self, id, nome, email, senha):
+    def __init__(self, id, nome, email, senha, nivel):
         self.id = id
         self.nome = nome
         self.email = email
         self.senha = senha
+        self.nivel = nivel
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -38,31 +40,76 @@ def load_user(user_id):
     conn.close()
     
     if row:
-        return User(row['id'], row['nome'], row['email'], row['senha'])
+        return User(row['id'], row['nome'], row['email'], row['senha'], row['nivel'])
     return None
+
+def nivel_requerido(*niveis):
+    def wrapper(f):
+        @wraps(f)
+        def decorated_view(*args, **kwargs):
+            if current_user.nivel not in niveis:
+                abort(403)  # Acesso negado
+            return f(*args, **kwargs)
+        return decorated_view
+    return wrapper
+
+def get_proprietario_id(usuario_id):
+    conn = conexao()
+    row = conn.execute('SELECT id FROM proprietario WHERE usuario_id = ?', (usuario_id,)).fetchone()
+    conn.close()
+    return row['id'] if row else None
 
 
 @app.route('/')
-# @login_required
+@login_required
 def home():
     conn = conexao()
-    recebimentos = conn.execute('''
-        SELECT
-            r.id AS recebimento_id,
-            c.nome AS nome_cavalo,
-            c.imagem AS imagem,
-            p.nome AS nome_proprietario,
-            r.data,
-            GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
-        FROM recebimentos r
-        JOIN cavalos c ON r.cavalo_id = c.id
-        JOIN proprietario p ON r.proprietario_id = p.id
-        LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
-        LEFT JOIN produtos prod ON ir.produto_id = prod.id
-        GROUP BY r.id, c.nome, c.imagem, p.nome, r.data
-        ORDER BY r.data DESC
-        LIMIT 5
-    ''').fetchall()
+    recebimentos = []
+
+    if current_user.nivel == 'Proprietario':
+        proprietario_id = get_proprietario_id(current_user.id)
+
+        if proprietario_id is not None:
+            recebimentos = conn.execute('''
+                SELECT
+                    r.id AS recebimento_id,
+                    c.nome AS nome_cavalo,
+                    c.imagem AS imagem,
+                    p.nome AS nome_proprietario,
+                    r.data,
+                    GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
+                FROM recebimentos r
+                JOIN cavalos c ON r.cavalo_id = c.id
+                JOIN proprietario p ON r.proprietario_id = p.id
+                LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
+                LEFT JOIN produtos prod ON ir.produto_id = prod.id
+                WHERE r.proprietario_id = ?
+                GROUP BY r.id, c.nome, c.imagem, p.nome, r.data
+                ORDER BY r.data DESC
+                LIMIT 5
+            ''', (proprietario_id,)).fetchall()
+        else:
+            flash('Sua conta de proprietário não está vinculada a um perfil de proprietário. Contate o administrador.', 'warning')
+            recebimentos = []
+    else:
+        recebimentos = conn.execute('''
+            SELECT
+                r.id AS recebimento_id,
+                c.nome AS nome_cavalo,
+                c.imagem AS imagem,
+                p.nome AS nome_proprietario,
+                r.data,
+                GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
+            FROM recebimentos r
+            JOIN cavalos c ON r.cavalo_id = c.id
+            JOIN proprietario p ON r.proprietario_id = p.id
+            LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
+            LEFT JOIN produtos prod ON ir.produto_id = prod.id
+            GROUP BY r.id, c.nome, c.imagem, p.nome, r.data
+            ORDER BY r.data DESC
+            LIMIT 5
+        ''').fetchall()
+
     conn.close()
 
     formatted_recebimentos_data = []
@@ -74,30 +121,60 @@ def home():
     return render_template('index.html', recebimentos=formatted_recebimentos_data)
 
 @app.route('/cavalos')
+@login_required
 def cavalos():
     conn = conexao()
-    cavalos = conn.execute('''
-        SELECT
-            c.id, 
-            c.nome AS nome_cavalo,
-            p.nome AS nome_proprietario,
-            r.raca AS raca,
-            s.sexo AS sexo,
-            c.idade,
-            pl.pelagem AS pelagem,
-            c.imagem
-        FROM cavalos c
-        JOIN proprietario p ON c.proprietario_id = p.id
-        JOIN raca r ON c.raca_id = r.id
-        JOIN sexo s ON c.sexo_id = s.id
-        JOIN pelagem pl ON c.pelagem_id = pl.id
-        ORDER BY c.nome
-    ''').fetchall()
+    cavalos = []
+
+    if current_user.nivel == 'Proprietario':
+        proprietario_id = get_proprietario_id(current_user.id)
+
+        if proprietario_id is not None:
+            cavalos = conn.execute('''
+                SELECT
+                    c.id, 
+                    c.nome AS nome_cavalo,
+                    p.nome AS nome_proprietario,
+                    r.raca AS raca,
+                    s.sexo AS sexo,
+                    c.idade,
+                    pl.pelagem AS pelagem,
+                    c.imagem
+                FROM cavalos c
+                JOIN proprietario p ON c.proprietario_id = p.id
+                JOIN raca r ON c.raca_id = r.id
+                JOIN sexo s ON c.sexo_id = s.id
+                JOIN pelagem pl ON c.pelagem_id = pl.id
+                WHERE c.proprietario_id = ?
+                ORDER BY c.nome
+            ''', (proprietario_id,)).fetchall()
+        else:
+            flash('Sua conta de proprietário não está vinculada a um perfil de proprietário. Contate o administrador.', 'warning')
+            cavalos = []
+    else:
+        cavalos = conn.execute('''
+            SELECT
+                c.id, 
+                c.nome AS nome_cavalo,
+                p.nome AS nome_proprietario,
+                r.raca AS raca,
+                s.sexo AS sexo,
+                c.idade,
+                pl.pelagem AS pelagem,
+                c.imagem
+            FROM cavalos c
+            JOIN proprietario p ON c.proprietario_id = p.id
+            JOIN raca r ON c.raca_id = r.id
+            JOIN sexo s ON c.sexo_id = s.id
+            JOIN pelagem pl ON c.pelagem_id = pl.id
+            ORDER BY c.nome
+        ''').fetchall()
     conn.close()
     return render_template('cavalos.html', cavalos=cavalos)
     
 
 @app.route('/proprietarios')
+@login_required
 def proprietarios():
     conn = conexao()
     proprietarios = conn.execute('SELECT * FROM proprietario ORDER BY nome').fetchall()
@@ -105,23 +182,50 @@ def proprietarios():
     return render_template('proprietarios.html', proprietarios=proprietarios)
 
 @app.route('/recebimentos')
+@login_required
 def recebimentos():
     conn = conexao()
-    recebimentos = conn.execute('''
-        SELECT
-            r.id AS recebimento_id,
-            c.nome AS nome_cavalo,
-            p.nome AS nome_proprietario,
-            r.data,
-            GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
-        FROM recebimentos r
-        JOIN cavalos c ON r.cavalo_id = c.id
-        JOIN proprietario p ON r.proprietario_id = p.id
-        LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
-        LEFT JOIN produtos prod ON ir.produto_id = prod.id
-        GROUP BY r.id, c.nome, p.nome, r.data
-        ORDER BY r.data DESC
-    ''').fetchall()
+    recebimentos = []
+    if current_user.nivel == 'Proprietario':
+        proprietario_id = get_proprietario_id(current_user.id)
+
+        if proprietario_id is not None:
+            recebimentos = conn.execute('''
+                SELECT
+                    r.id AS recebimento_id,
+                    c.nome AS nome_cavalo,
+                    p.nome AS nome_proprietario,
+                    r.data,
+                    GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
+                FROM recebimentos r
+                JOIN cavalos c ON r.cavalo_id = c.id
+                JOIN proprietario p ON r.proprietario_id = p.id
+                LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
+                LEFT JOIN produtos prod ON ir.produto_id = prod.id
+                WHERE r.proprietario_id = ?
+                GROUP BY r.id, c.nome, p.nome, r.data
+                ORDER BY r.data DESC
+            ''', (proprietario_id,)).fetchall()
+        else:
+            flash('Sua conta de proprietário não está vinculada a um perfil de proprietário. Contate o administrador.', 'warning')
+            recebimentos = []
+    else:
+        recebimentos = conn.execute('''
+            SELECT
+                r.id AS recebimento_id,
+                c.nome AS nome_cavalo,
+                p.nome AS nome_proprietario,
+                r.data,
+                GROUP_CONCAT(prod.nome || ' (' || ir.quantidade || ')', '<br>') AS itens
+            FROM recebimentos r
+            JOIN cavalos c ON r.cavalo_id = c.id
+            JOIN proprietario p ON r.proprietario_id = p.id
+            LEFT JOIN itens_recebimento ir ON r.id = ir.recebimento_id
+            LEFT JOIN produtos prod ON ir.produto_id = prod.id
+            GROUP BY r.id, c.nome, p.nome, r.data
+            ORDER BY r.data DESC
+        ''').fetchall()
+
     conn.close()
 
     formatted_recebimentos_data = []
@@ -132,20 +236,44 @@ def recebimentos():
     return render_template('recebimentos.html', recebimentos=recebimentos)
 
 @app.route('/ocorrencias')
+@login_required
 def ocorrencias():
     conn = conexao()
-    ocorrencias = conn.execute('''
-        SELECT
-            o.id AS ocorrencia_id,
-            c.nome AS nome_cavalo,
-            p.nome AS nome_proprietario,
-            o.tipo,
-            o.data
-        FROM ocorrencias o
-        JOIN cavalos c ON o.cavalo_id = c.id
-        JOIN proprietario p ON o.proprietario_id = p.id
-        ORDER BY o.data DESC
-    ''').fetchall()
+    ocorrencias = []
+
+    if current_user.nivel == 'Proprietario':
+        proprietario_id = get_proprietario_id(current_user.id)
+
+        if proprietario_id is not None:
+            ocorrencias = conn.execute('''
+                SELECT
+                    o.id AS ocorrencia_id,
+                    c.nome AS nome_cavalo,
+                    p.nome AS nome_proprietario,
+                    o.tipo,
+                    o.data
+                FROM ocorrencias o
+                JOIN cavalos c ON o.cavalo_id = c.id
+                JOIN proprietario p ON o.proprietario_id = p.id
+                WHERE o.proprietario_id = ?
+                ORDER BY o.data DESC
+            ''', (proprietario_id,)).fetchall()
+        else:
+            flash('Sua conta de proprietário não está vinculada a um perfil de proprietário. Contate o administrador.', 'warning')
+            ocorrencias = []
+    else:
+        ocorrencias = conn.execute('''
+            SELECT
+                o.id AS ocorrencia_id,
+                c.nome AS nome_cavalo,
+                p.nome AS nome_proprietario,
+                o.tipo,
+                o.data
+            FROM ocorrencias o
+            JOIN cavalos c ON o.cavalo_id = c.id
+            JOIN proprietario p ON o.proprietario_id = p.id
+            ORDER BY o.data DESC
+        ''').fetchall()
     conn.close()
 
     formatted_ocorrencias_data = []
@@ -156,6 +284,7 @@ def ocorrencias():
     return render_template('ocorrencias.html', ocorrencias=formatted_ocorrencias_data)
 
 @app.route('/novo_cavalo', methods=['GET','POST'])
+@login_required
 def novoCavalo():
     conn = conexao()
     if request.method == 'POST':
@@ -193,6 +322,7 @@ def novoCavalo():
     return render_template('cadastrar_cavalos.html', proprietarios = proprietarios, sexos=sexos, racas=racas, pelagens=pelagens)
 
 @app.route('/cavalo/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editarCavalo(id):
     conn = conexao()
     if request.method == 'POST':
@@ -220,6 +350,7 @@ def editarCavalo(id):
     return render_template('editar_cavalo.html', cavalo=cavalo, proprietarios=proprietarios, sexos=sexos, racas=racas, pelagens=pelagens)
 
 @app.route('/cavalo/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluirCavalo(id):
     conn = conexao()
     conn.execute('DELETE FROM cavalos WHERE id=?', (id,))
@@ -230,6 +361,7 @@ def excluirCavalo(id):
 
 
 @app.route('/cavalo/<int:id>')
+@login_required
 def detalhesCavalo(id):
     conn = conexao()
     cavalo = conn.execute('''
@@ -264,6 +396,8 @@ def detalhesCavalo(id):
 
 
 @app.route('/novo_proprietario', methods=['GET','POST'])
+@login_required
+# @nivel_requerido('Administrador')
 def novoProprietario():
     conn = conexao()
     if request.method == 'POST':
@@ -280,6 +414,7 @@ def novoProprietario():
     return render_template('cadastrar_proprietario.html')
 
 @app.route('/proprietario/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editarProprietario(id):
     conn = conexao()
     if request.method == 'POST':
@@ -295,6 +430,7 @@ def editarProprietario(id):
     return render_template('editar_proprietario.html', proprietario=proprietario)
 
 @app.route('/proprietario/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluirProprietario(id):
     conn = conexao()
     conn.execute('DELETE FROM proprietario WHERE id=?', (id,))
@@ -305,6 +441,7 @@ def excluirProprietario(id):
 
 
 @app.route('/novo_recebimento', methods=['GET', 'POST'])
+@login_required
 def novoRecebimento():
     conn = conexao()
     try:
@@ -315,14 +452,12 @@ def novoRecebimento():
             produto_ids = request.form.getlist('produto_id[]')
             quantidades = request.form.getlist('quantidade[]')
 
-            # Inserir na tabela de recebimentos
             conn.execute('''
                 INSERT INTO recebimentos (proprietario_id, cavalo_id, data)
                 VALUES (?, ?, ?)
             ''', (proprietario_id, cavalo_id, data_recebimento))
             recebimento_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-            # Inserir múltiplos itens de recebimento
             for i in range(len(produto_ids)):
                 produto_id = produto_ids[i]
                 quantidade = quantidades[i]
@@ -349,6 +484,7 @@ def novoRecebimento():
         return "Erro ao cadastrar recebimento. Por favor, verifique os dados e tente novamente."
     
 @app.route('/editar_recebimento/<int:id>', methods=['GET', 'POST'])
+@login_required
 def editarRecebimento(id):
     conn = conexao()
     try:
@@ -357,13 +493,10 @@ def editarRecebimento(id):
             produto_ids = request.form.getlist('produto_id[]')
             quantidades = request.form.getlist('quantidade[]')
 
-            # Atualizar data
             conn.execute("UPDATE recebimentos SET data = ? WHERE id = ?", (data, id))
 
-            # Apagar itens antigos
             conn.execute("DELETE FROM itens_recebimento WHERE recebimento_id = ?", (id,))
 
-            # Inserir novos itens
             for i in range(len(produto_ids)):
                 produto_id = produto_ids[i]
                 quantidade = quantidades[i]
@@ -376,7 +509,6 @@ def editarRecebimento(id):
             conn.close()
             return redirect('/recebimentos')
 
-        # GET: buscar dados para exibir
         recebimento = conn.execute('''
             SELECT r.id, r.data, c.nome AS cavalo_nome, p.nome AS proprietario_nome
             FROM recebimentos r
@@ -408,6 +540,7 @@ def editarRecebimento(id):
 
 
 @app.route('/recebimento/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluirRecebimento(id):
     conn = conexao()
     conn.execute('DELETE FROM itens_recebimento WHERE recebimento_id=?', (id,))
@@ -419,10 +552,12 @@ def excluirRecebimento(id):
 
 
 @app.route('/nova_ocorrencia', methods=['GET', 'POST'])
+@login_required
 def novaOcorrencia():
     return novaOcorrenciaInterna()
 
 @app.route('/nova_ocorrencia/<int:cavalo_id>', methods=['GET', 'POST'])
+@login_required
 def novaOcorrenciaComCavalo(cavalo_id):
     return novaOcorrenciaInterna(cavalo_id)
 
@@ -451,7 +586,6 @@ def novaOcorrenciaInterna(cavalo_id=None):
             conn.close()
             return redirect('/ocorrencias')
 
-        # Carrega cavalos e proprietários para o formulário
         cavalos = conn.execute('SELECT * FROM cavalos').fetchall()
         proprietarios = conn.execute('SELECT * FROM proprietario').fetchall()
 
@@ -474,6 +608,7 @@ def novaOcorrenciaInterna(cavalo_id=None):
         return "Erro ao cadastrar ocorrência. Por favor, verifique os dados e tente novamente."
     
 @app.route('/ocorrencia/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editarOcorrencia(id):
     conn = conexao()
 
@@ -481,7 +616,7 @@ def editarOcorrencia(id):
         data = request.form['data']
         tipo = request.form['tipo']
         descricao = request.form['descricao']
-        cavalo_id = request.form.get('cavalo_id')  # se quiser permitir edição do cavalo
+        cavalo_id = request.form.get('cavalo_id') 
         conn.execute('''
             UPDATE ocorrencias SET data=?, tipo=?, descricao=? WHERE id=?
         ''', (data, tipo, descricao, id))
@@ -498,6 +633,7 @@ def editarOcorrencia(id):
 
 
 @app.route('/ocorrencia/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluirOcorrencia(id):
     conn = conexao()
     conn.execute('DELETE FROM ocorrencias WHERE id=?', (id,))
@@ -512,22 +648,27 @@ def login():
         senha = request.form['senha']
 
         conn = conexao()
-        usuario = conn.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
+        usuario_row = conn.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
         conn.close()
 
-        if usuario and check_password_hash(usuario['senha'], senha):
-            session['usuario_id'] = usuario['id']
-            session['usuario_nome'] = usuario['nome']
-            session['usuario_nivel'] = usuario['nivel']
-            return redirect(url_for('home'))
+        if usuario_row and check_password_hash(usuario_row['senha'], senha):
+            usuario = User(usuario_row['id'], usuario_row['nome'], usuario_row['email'], usuario_row['senha'], usuario_row['nivel'])
+            login_user(usuario) 
+            flash('Login realizado com sucesso!', 'success')
+            return redirect(url_for('home')) 
         else:
             flash('Email ou senha inválidos', 'danger')
+    
     return render_template('login.html')
 
+
 @app.route('/logout')
+@login_required
 def logout():
-    session.clear()
+    logout_user()
+    flash('Você saiu da sua conta.', 'info')
     return redirect(url_for('login'))
+
 
 @app.route('/esqueci_senha', methods=['GET', 'POST'])
 def esqueci_senha():
@@ -539,7 +680,6 @@ def esqueci_senha():
 
         if usuario:
             flash('Instruções para redefinir sua senha foram enviadas para o e-mail.', 'success')
-            # Aqui você pode gerar token e enviar e-mail (ou só mostrar uma próxima tela)
         else:
             flash('E-mail não encontrado.', 'danger')
 
@@ -548,6 +688,8 @@ def esqueci_senha():
 
 
 @app.route('/usuarios')
+# @login_required
+# @nivel_requerido('Administrador')
 def usuarios():
     conn = conexao()
     usuarios = conn.execute('SELECT * FROM usuarios ORDER BY nome').fetchall()
@@ -556,6 +698,8 @@ def usuarios():
 
 
 @app.route('/novo_usuario', methods=['GET', 'POST'])
+# @login_required
+# @nivel_requerido('Administrador')
 def novoUsuario():
     conn = conexao()
     if request.method == 'POST':
@@ -564,22 +708,53 @@ def novoUsuario():
         senha = request.form['senha']
         nivel = request.form['nivel']
 
-        # Criptografar senha antes de salvar no banco
+        proprietario_id = request.form.get('proprietario_id') 
+
         senha_hash = generate_password_hash(senha)
 
-        conn.execute('''
-            INSERT INTO usuarios (nome, email, senha, nivel)
-            VALUES (?, ?, ?, ?)
-        ''', (nome, email, senha_hash, nivel))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('usuarios'))
+        try:
+            conn.execute('''
+                INSERT INTO usuarios (nome, email, senha, nivel)
+                VALUES (?, ?, ?, ?)
+            ''', (nome, email, senha_hash, nivel))
+            
+            user_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0] 
 
+            if nivel == 'Proprietario' and proprietario_id:
+                existing_link = conn.execute('SELECT usuario_id FROM proprietario WHERE id = ?', (proprietario_id,)).fetchone()
+                if existing_link and existing_link['usuario_id'] is not None:
+                    conn.rollback()
+                    flash(f'O proprietário selecionado (ID: {proprietario_id}) já está vinculado a outro usuário.', 'danger')
+                    proprietarios_disponiveis = conn.execute('SELECT id, nome FROM proprietario WHERE usuario_id IS NULL').fetchall()
+                    conn.close()
+                    return render_template('cadastrar_usuario.html', proprietarios=proprietarios_disponiveis)
+                
+                conn.execute('UPDATE proprietario SET usuario_id = ? WHERE id = ?', (user_id, proprietario_id))
+            
+            conn.commit()
+            flash('Usuário cadastrado com sucesso!', 'success')
+            return redirect(url_for('usuarios'))
+
+        except sqlite3.IntegrityError as e:
+            conn.rollback()
+            if "UNIQUE constraint failed: usuarios.email" in str(e):
+                flash('Este e-mail já está em uso. Por favor, escolha outro.', 'danger')
+            else:
+                flash(f'Erro ao cadastrar usuário: {e}', 'danger')
+            print(f"Erro de integridade ao cadastrar usuário: {e}")
+
+        except Exception as e:
+            conn.rollback()
+            flash(f'Ocorreu um erro inesperado: {e}', 'danger')
+            print(f"Erro inesperado ao cadastrar usuário: {e}")
+            
+    proprietarios_disponiveis = conn.execute('SELECT id, nome FROM proprietario WHERE usuario_id IS NULL').fetchall() 
     conn.close()
-    return render_template('cadastrar_usuario.html')
+    return render_template('cadastrar_usuario.html', proprietarios=proprietarios_disponiveis)
 
 
 @app.route('/usuarios/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editarUsuario(id):
     conn = conexao()
 
@@ -594,7 +769,7 @@ def editarUsuario(id):
 
         conn.commit()
         conn.close()
-        return redirect(url_for('listarUsuarios'))
+        return redirect(url_for('usuarios'))
 
     usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
     conn.close()
@@ -604,6 +779,7 @@ def editarUsuario(id):
 
 
 @app.route('/usuario/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluirUsuario(id):
     conn = conexao()
     conn.execute('DELETE FROM usuarios WHERE id=?', (id,))

@@ -1,11 +1,14 @@
 {% extends 'base.html' %} {% block content %}
 
 <h2 class="mb-4">Recebimentos</h2>
+
+{% if current_user.nivel in ['Administrador', 'Funcionario'] %}
 <div class="d-flex justify-content-end mt-4 mb-3">
   <a href="{{ url_for('novoRecebimento') }}" class="btn btn-primary">
     <i class="bi bi-plus-circle"></i> Novo Recebimento
   </a>
 </div>
+{% endif %}
 
 <div class="d-flex flex-column gap-3">
   <!-- Cabeçalhos -->
@@ -17,7 +20,9 @@
       <div class="col-md-3 fw-bold text-muted small text-center">Cavalo</div>
       <div class="col-md-2 fw-bold text-muted small text-center">Data</div>
       <div class="col-md-2 fw-bold text-muted small text-center">Itens</div>
+      {% if current_user.nivel in ['Administrador', 'Funcionario'] %}
       <div class="col-md-2 fw-bold text-muted small text-center">Ações</div>
+      {% endif %}
     </div>
   </div>
 
@@ -32,6 +37,7 @@
       <div class="col-md-2 text-center">
         {{ r['itens'] | safe if r['itens'] else '-' }}
       </div>
+      {% if current_user.nivel in ['Administrador', 'Funcionario'] %}
       <div class="col-md-2 d-flex justify-content-center gap-2">
         <a
           href="{{ url_for('editarRecebimento', id=r['recebimento_id']) }}"
@@ -54,6 +60,7 @@
           </button>
         </form>
       </div>
+      {% endif %}
     </div>
   </div>
   {% endfor %}

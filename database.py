@@ -43,7 +43,9 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS proprietario (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
-            telefone TEXT
+            telefone TEXT,
+            usuario_id INTEGER,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         );
         
         CREATE TABLE IF NOT EXISTS sexo (
