@@ -397,7 +397,7 @@ def detalhesCavalo(id):
 
 @app.route('/novo_proprietario', methods=['GET','POST'])
 @login_required
-# @nivel_requerido('Administrador')
+@nivel_requerido('Administrador')
 def novoProprietario():
     conn = conexao()
     if request.method == 'POST':
@@ -688,8 +688,8 @@ def esqueci_senha():
 
 
 @app.route('/usuarios')
-# @login_required
-# @nivel_requerido('Administrador')
+@login_required
+@nivel_requerido('Administrador')
 def usuarios():
     conn = conexao()
     usuarios = conn.execute('SELECT * FROM usuarios ORDER BY nome').fetchall()
@@ -698,8 +698,8 @@ def usuarios():
 
 
 @app.route('/novo_usuario', methods=['GET', 'POST'])
-# @login_required
-# @nivel_requerido('Administrador')
+@login_required
+@nivel_requerido('Administrador')
 def novoUsuario():
     conn = conexao()
     if request.method == 'POST':
